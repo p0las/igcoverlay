@@ -9,7 +9,6 @@ from geopy.distance import geodesic
 SMOOTHING = 0.07
 
 
-
 # def interpolate(data, smoothing=0.00000005):
 #     # return data
 #     x = np.arange(len(data))
@@ -17,23 +16,23 @@ SMOOTHING = 0.07
 #     return spline(x)
 
 
-def interpolate_besier(data):
+def interpolate_besier(data, t=0.5):
     data2 = np.zeros(len(data))
     for i in range(0, len(data)):
         try:
-            data2[i] = (bezier_interpolate_middle(data[i - 2], data[i - 1], data[i + 1], data[i + 2]) + data[i]) / 2
+            data2[i] = (bezier_interpolate(data[i - 2], data[i - 1], data[i + 1], data[i + 2], t) + data[i]) / 2
         except:
             data2[i] = data[i]
     return data2
+
 
 # def distance(point1, point2):
 #     R = 6371000
 #     degToRad = math.pi / 180.0
 #     return R * degToRad * math.sqrt(math.pow(math.cos(point1.lat * degToRad) * (point1.lng - point2.lng), 2) + math.pow(point1.lat - point2.lat, 2))
 
-def bezier_interpolate_middle(p0, p1, p2, p3):
+def bezier_interpolate(p0, p1, p2, p3, t=0.5):
     """Interpolates the middle point using a cubic Bézier curve from 5 evenly spaced points."""
-    t = 0.5  # Middle of the curve
 
     # Define Bézier control points (using the middle 4 points)
     B0, B1, B2, B3 = p0, p1, p2, p3  # p4 is ignored since we only use cubic Bézier
@@ -45,6 +44,29 @@ def bezier_interpolate_middle(p0, p1, p2, p3):
                     t ** 3 * B3)
 
     return middle_point
+
+
+class Interpolator():
+    def __init__(self, data):
+        self.data = data
+
+    def get(self, time: float):
+        index = int(time)
+        if index <2:
+            return self.data[index]
+        try:
+            t = (time - index)/2+0.5
+            return (bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index + 1], self.data[index + 2], t) + self.data[index]) / 2
+        except:
+            return self.data[index]
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __len__(self):
+        return len(self.data)
+
+
 class IgcReader():
     def __init__(self):
         self._igc_reader = igc_reader.read_igc
@@ -56,9 +78,9 @@ class IgcReader():
         self._raw_data = self._igc_reader.from_file(path)
         self._track = self._raw_data.track
 
-        self._altitude = interpolate_besier(self._track.gps_alt)
-        self.latitude = interpolate_besier(self._track.latitude)
-        self.longitude = interpolate_besier(self._track.longitude)
+        self._altitude = Interpolator(self._track.gps_alt)
+        self.latitude = Interpolator(self._track.latitude)
+        self.longitude = Interpolator(self._track.longitude)
 
         self.distance = np.zeros(len(self._track.latitude))
 
@@ -71,7 +93,7 @@ class IgcReader():
             # try:
             #     self.speed[i] = (bezier_interpolate_middle(self.distance[i - 2], self.distance[i - 1], self.distance[i + 1], self.distance[i + 2]) + self.distance[i]) / 2
             # except:
-                self.speed[i] = self.distance[i]
+            self.speed[i] = self.distance[i]
 
     def getLength(self):
         return len(self._track.latitude)
@@ -80,8 +102,11 @@ class IgcReader():
         # p = Point(self.latitude[index], self.longitude[index])
         # p2 = Point(self.latitude[index + 1], self.longitude[index + 1])
         # speed = p.distance(p2)  # m/s (each sample is 1 second)
-        speed = self.speed[index]  # m/s (each sample is 1 second)
-        return speed * 3.6  # km/h
+
+        i=index
+        distance = geodesic((self.latitude[i], self.longitude[i]), (self.latitude[i - 1], self.longitude[i - 1])).meters
+
+        return distance * 3.6  # km/h
 
     def getAltitude(self, index):
         return self._altitude[index]

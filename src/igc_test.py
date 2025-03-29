@@ -3,7 +3,7 @@ from pathlib import Path
 import aerofiles
 import pytest
 
-from igc import IgcReader, bezier_interpolate_middle
+from igc import IgcReader, bezier_interpolate, Interpolator
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
@@ -37,6 +37,45 @@ def igc_reader():
     igc = IgcReader()
     igc.load(path.as_posix())
     return igc
+
+class Test_interpolator():
+    def test_test(self):
+        input = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        i = Interpolator(input)
+        print(i.get(0))
+        assert i.get(0) == 1
+        assert i.get(1) == 2
+
+        for n in [4,4.25,4.5,4.75,5]:
+            assert i.get(n) == pytest.approx(n+1, rel=1e-2)
+
+        plt.figure(figsize=(18, 5))
+        # plt.plot(long, lat, '-', label='Rounded Data', markersize=5, alpha=0.6)
+        # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
+        # plt.plot(long2, lat2, '-', label='curve', linewidth=2)
+        # plt.plot(long, lat, 'o', label='curve', linewidth=2,markersize=5)
+
+        x = np.arange(len(input))
+        xx = np.arange(0, 10, 0.1)
+        ii = [i.get(n) for n in xx]
+        plt.plot(x, input, 'o', label='reference', markersize=5)
+        plt.plot(xx, ii, '-', label='curve', linewidth=2)
+
+        plt.legend()
+        plt.xlabel("Index")
+        plt.ylabel("Value")
+        plt.title("Restoring a Smooth Curve from Rounded Data")
+        plt.grid()
+        plt.show()
+
+    def test_array(self):
+        input = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        i = Interpolator(input)
+
+        for n in [4,4.25,4.5,4.75,5]:
+            print(i[n])
+
+
 
 
 class Test_test():
@@ -212,7 +251,7 @@ class Test_test():
 
             try:
                 # average
-                data_b[i] = (bezier_interpolate_middle(data[i - 2], data[i - 1], data[i + 1], data[i + 2]) + data[i]) / 2
+                data_b[i] = (bezier_interpolate(data[i - 2], data[i - 1], data[i + 1], data[i + 2]) + data[i]) / 2
             except:
                 data_b[i] = data[i]
 
@@ -238,7 +277,7 @@ class Test_test():
         # plt.plot(igc.latitude[1700:2000], igc.longitude[1700:2000], '-', label='Smoothed Curve', linewidth=2)
         # plt.plot(igc._track.latitude[1700:2000], igc._track.longitude[1700:2000], 'o', label='Smoothed Curve', markersize=2)
 
-         plt.legend()
+        plt.legend()
         plt.xlabel("Index")
         plt.ylabel("Value")
         plt.title("Restoring a Smooth Curve from Rounded Data")

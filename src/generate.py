@@ -1,38 +1,33 @@
 import argparse
+from pathlib import Path
 
-from csv_reader import CsvReader
 from igc import IgcReader
 from overlay import OverlayImage, makeOverlayPath
+from tqdm import tqdm
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--igc', type=str, help='Input IGC file')
-    parser.add_argument('--csv', type=str, help='Input CSV file')
+    parser.add_argument('--igc', type=str, required=True, help='Input IGC file')
 
-    parser.add_argument('--out', type=str, help='Output folder')
+    parser.add_argument('--out', type=str, required=True, help='Output folder')
+    parser.add_argument('--fps', type=int, default=1, help='overlay FPS, default 1')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    if args.igc:
-        igc = IgcReader()
-        igc.load(args.igc)
-    elif args.csv:
-        igc = CsvReader()
-        igc.load(args.csv)
-    else:
-        raise ValueError("No input file provided")
+    igc = IgcReader()
+    igc.load(args.igc)
 
-    for i in range(igc.getLength()-1):
+    fps = args.fps
+    for i in tqdm(range((igc.getLength() - 1) * fps)):
         o = OverlayImage(1000, 1000)
-        p = makeOverlayPath(args.out, "overlay", i)
+        p = makeOverlayPath(args.out, "overlay_" + Path(args.igc).stem, i)
         data = {
-            "vs": igc.getVerticalSpeed(i),
-            "speed": igc.getSpeed(i),
-            "alt": igc.getAltitude(i)
+            "vs": igc.getVerticalSpeed(float(i) / fps),
+            "speed": igc.getSpeed(float(i) / fps),
+            "alt": igc.getAltitude(float(i) / fps)
         }
-        print(data)
         o.generate(p, data)

@@ -101,13 +101,14 @@ class OverlayImage():
         if 'vs' in data and data['vs'] is not None:
             self.addSection(left_margin, "VS (m/s)", data['vs'])
 
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.img.save(path)
 
     def addSection(self, left_margin, label, value):
 
         self.textWithBorder(left_margin, self.current_top, label, self.border_thickness/2, self.font_small, self.colour, self.outline_colour)
         self.moveTopLabel()
-        self.textWithBorder(left_margin, self.current_top, str(round(value, 2)), self.border_thickness, self.font, self.colour, self.outline_colour)
+        self.textWithBorder(left_margin, self.current_top, str(round(value, 1)), self.border_thickness, self.font, self.colour, self.outline_colour)
         self.moveTopSection()
 
     def moveTopSection(self):
