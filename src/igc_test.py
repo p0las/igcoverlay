@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 import csv
+from qbstyles import mpl_style
 
 
 @pytest.fixture()
@@ -83,7 +84,7 @@ class Test_test():
         igc = igc_reader
 
         s = 15
-        e = 400
+        e = 150
         ll = e - s
 
         lat = np.zeros(ll)
@@ -101,12 +102,13 @@ class Test_test():
 
         # x = np.arange(ll)
 
+        mpl_style(dark=True)
         plt.figure(figsize=(18, 18))
         # plt.plot(long, lat, '-', label='Rounded Data', markersize=5, alpha=0.6)
         # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
 
         lat = [igc.latitude[i] for i in np.arange(s, e, 0.1)]
-        long = [igc.longitude[i] for i in np.arange(s, e,0.1)]
+        long = [igc.longitude[i] for i in np.arange(s, e, 0.1)]
 
         plt.plot(lat, long, '-', label='curve', linewidth=2)
 
@@ -202,23 +204,25 @@ class Test_test():
             ref[i] = csv_data[i + s]['altitude']
             data[i] = igc_reader.getAltitude(i + s)
 
+        mpl_style(dark=True)
+
         plt.figure(figsize=(18, 5))
         # plt.plot(long, lat, '-', label='Rounded Data', markersize=5, alpha=0.6)
         # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
         # plt.plot(long2, lat2, '-', label='curve', linewidth=2)
         # plt.plot(long, lat, 'o', label='curve', linewidth=2,markersize=5)
 
-        plt.plot(x, ref, 'o', label='reference', markersize=5)
+        plt.plot(x, ref, 'o', label='raw value', markersize=5)
 
-        data = [igc_reader.getAltitude(a) for a in np.arange(s, e,0.1)]
-        x= np.arange(0, e-s,0.1)
+        data = [igc_reader.getAltitude(a) for a in np.arange(s, e, 0.1)]
+        x = np.arange(0, e - s, 0.1)
 
         plt.plot(x, data, '-', label='curve', linewidth=2)
 
         plt.legend()
         plt.xlabel("Index")
         plt.ylabel("Value")
-        plt.title("Restoring a Smooth Curve from Rounded Data")
+        plt.title("Interpolated altitude")
         plt.grid()
         plt.show()
 
@@ -283,11 +287,10 @@ class Test_test():
         plt.plot(x, data_avg, '-', label='avg', linewidth=2)
         plt.plot(x, data_b, '-', label='bezier', linewidth=2)
 
-        data = [igc_reader.getVerticalSpeed(a) for a in np.arange(s, e,0.1)]
-        x= np.arange(0, e-s,0.1)
+        data = [igc_reader.getVerticalSpeed(a) for a in np.arange(s, e, 0.1)]
+        x = np.arange(0, e - s, 0.1)
 
         plt.plot(x, data, '-', label='curve', linewidth=2)
-
 
         # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
         # plt.plot(x, igc.distance_smooth[1700:2200], '-', label='curve', linewidth=2)
