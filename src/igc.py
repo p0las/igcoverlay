@@ -34,8 +34,8 @@ def interpolate_besier(data, t=0.5):
 def bezier_interpolate(p0, p1, p2, p3, t=0.5):
     """Interpolates the middle point using a cubic Bézier curve from 5 evenly spaced points."""
 
-    # Define Bézier control points (using the middle 4 points)
-    B0, B1, B2, B3 = p0, p1, p2, p3  # p4 is ignored since we only use cubic Bézier
+    # Define Bézier control points
+    B0, B1, B2, B3 = p0, p1, p2, p3
 
     # Compute cubic Bézier interpolation
     middle_point = ((1 - t) ** 3 * B0 +
@@ -52,11 +52,149 @@ class Interpolator():
 
     def get(self, time: float):
         index = int(time)
-        if index <2:
+        if index < 2:
             return self.data[index]
         try:
-            t = (time - index)/2+0.5
-            return (bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index + 1], self.data[index + 2], t) + self.data[index]) / 2
+            t = time - index
+            m = 1.0 / 3.0
+
+            tt = t / 3 + m
+            tt1 = t / 3 + 2 * m
+            tt2 = t / 3
+
+            b = bezier_interpolate(self.data[index - 1], self.data[index], self.data[index + 1], self.data[index + 2], tt)
+            b1 = bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index], self.data[index + 1], tt1)
+            b2 = bezier_interpolate(self.data[index], self.data[index + 1], self.data[index + 2], self.data[index + 3], tt2)
+
+            return (b * m * 2) + (b1 * (1.0 - t) * m) + (b2 * t * m)
+
+            # return (bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index + 1], self.data[index + 2], t) + self.data[index]) / 2
+        except:
+            return self.data[index]
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __len__(self):
+        return len(self.data)
+
+
+class Interpolator2():
+    def __init__(self, data):
+        self.data = data
+
+    def calc(self,time):
+        index = int(time)
+        if index < 2:
+            return self.data[index]
+        try:
+            t = time - index
+            smoothing = 0.3
+
+            data = self.data[index - 4:index + 5]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data, s=smoothing)
+
+            s1 = spline(4)
+            # return s1
+
+            data = self.data[index - 3:index + 6]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data, s=smoothing)
+
+            s2 = spline(4)
+            # return (s1+s2)/2
+
+            x = [0, 1]
+            y = [s1, s2]
+
+            return np.interp(t, x, y)
+        except:
+            return self.data[index]
+
+
+    def get(self, time: float):
+
+        return (self.calc(time)+self.calc(time+1))/2
+
+        index = int(time)
+        if index < 2:
+            return self.data[index]
+        try:
+            t = time - index
+
+            # tt = t / 3 + 0.333
+            # tt1 = t / 3 + 0.666
+            # tt2 = t / 3
+            #
+            # m = 1.0 / 3.0
+            #
+            # b = bezier_interpolate(self.data[index - 1], self.data[index], self.data[index + 1], self.data[index + 2], tt)
+            # b1 = bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index], self.data[index + 1], tt1)
+            # b2 = bezier_interpolate(self.data[index], self.data[index + 1], self.data[index + 2], self.data[index + 3], tt2)
+            #
+            # # return (b * m * 2) + (b1 * (1.0 - t) * m) + (b2 * t * m)
+            #
+            # tt3 = t/3/2+0.5
+            # tt4 = t/3/2+m
+            # b3 = bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index + 1], self.data[index + 2], tt3)
+            # b4 = bezier_interpolate(self.data[index - 1], self.data[index], self.data[index + 2], self.data[index + 3], tt4)
+            #
+            # #return ((b3+b4)/2+self.data[index])/2
+            #
+            # a1 = (self.data[index - 1] + self.data[index] + self.data[index + 1])/3
+            # a2 = (self.data[index] + self.data[index + 1] + self.data[index + 2])/3
+            #
+            # # return (a2*t+(1-t)*a1 + self.data[index]*(1-t) + self.data[index+1]*t)/2
+
+            # b3 = bezier_interpolate(self.data[index - 2], self.data[index - 1], self.data[index + 1], self.data[index + 2], 0.5)
+            # b4 = bezier_interpolate(self.data[index - 1], self.data[index], self.data[index + 2], self.data[index + 3], 0.5)
+            # x = [0, 1]
+            # y = [b3, b4]
+            #
+            # yy = [self.data[index], self.data[index + 1]]
+            #
+            # return (np.interp(t, x, y) + np.interp(t, x, yy)) / 2
+
+            smoothing = 100
+
+            data = self.data[index - 4:index + 5]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data,s=smoothing)
+
+            s1 = spline(4 )
+            # return s1
+
+            data = self.data[index - 3:index + 6]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data, s=smoothing)
+
+            s2 = spline( 4)
+            # return (s1+s2)/2
+
+            x = [0, 1]
+            y = [s1, s2]
+
+            # return np.interp(t, x, y)
+
+            #control points
+
+            data = self.data[index - 5:index + 4]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data, s=smoothing)
+
+            sc1 = spline(4)
+            # return s1
+
+            data = self.data[index - 3:index + 7]
+            x = np.arange(len(data))
+            spline = UnivariateSpline(x, data, s=smoothing)
+
+            sc2 = spline(4)
+
+            return bezier_interpolate(sc1, s1, s2, sc2, t/3+(1.0/3.0))
+
+
         except:
             return self.data[index]
 
@@ -78,7 +216,7 @@ class IgcReader():
         self._raw_data = self._igc_reader.from_file(path)
         self._track = self._raw_data.track
 
-        self._altitude = Interpolator(self._track.gps_alt)
+        self._altitude = Interpolator2(self._track.gps_alt)
         self.latitude = Interpolator(self._track.latitude)
         self.longitude = Interpolator(self._track.longitude)
 
@@ -103,7 +241,7 @@ class IgcReader():
         # p2 = Point(self.latitude[index + 1], self.longitude[index + 1])
         # speed = p.distance(p2)  # m/s (each sample is 1 second)
 
-        i=index
+        i = index
         distance = geodesic((self.latitude[i], self.longitude[i]), (self.latitude[i - 1], self.longitude[i - 1])).meters
 
         return distance * 3.6  # km/h

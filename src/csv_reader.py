@@ -20,7 +20,8 @@ class CsvReader():
                 if i == 0:
                     continue
                 r = {}
-                r['latitude'] = float(row[2][3:10])
+                r['latitude'] = float(row[2][3:11])
+                print(r['latitude'])
                 r['longitude'] = float(row[3])
                 r['altitude'] = float(row[4])
                 r['speed'] = float(row[7])
