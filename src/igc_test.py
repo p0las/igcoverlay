@@ -107,6 +107,11 @@ class Test_test():
         # plt.plot(long, lat, '-', label='Rounded Data', markersize=5, alpha=0.6)
         # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
 
+        lat = [igc.latitude2[i] for i in np.arange(s, e, 0.1)]
+        long = [igc.longitude2[i] for i in np.arange(s, e, 0.1)]
+
+        plt.plot(lat, long, '-', label='bezier', linewidth=2)
+
         lat = [igc.latitude[i] for i in np.arange(s, e, 0.1)]
         long = [igc.longitude[i] for i in np.arange(s, e, 0.1)]
 
@@ -186,7 +191,7 @@ class Test_test():
         plt.legend()
         plt.xlabel("Index")
         plt.ylabel("Value")
-        plt.title("Interpolating imprecise data")
+        plt.title("Interpolating lat long data")
         plt.grid()
         plt.show()
 
