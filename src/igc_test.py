@@ -10,6 +10,7 @@ from scipy.interpolate import UnivariateSpline
 import csv
 from qbstyles import mpl_style
 
+mpl_style(dark=True)
 
 @pytest.fixture()
 def csv_data():
@@ -102,7 +103,6 @@ class Test_test():
 
         # x = np.arange(ll)
 
-        mpl_style(dark=True)
         plt.figure(figsize=(18, 18))
         # plt.plot(long, lat, '-', label='Rounded Data', markersize=5, alpha=0.6)
         # plt.plot(x, y_rounded, '-', label='curve', linewidth=2)
@@ -251,12 +251,16 @@ class Test_test():
             data[i] = igc_reader.getVerticalSpeed(i + s)
 
         data_avg = np.zeros(ll)
+
+        def vvv(i):
+            return igc_reader._track.gps_alt[i]-igc_reader._track.gps_alt[i-1]
+
         for i in range(0, ll):
             try:
                 # average
-                data_avg[i] = (data[i] + data[i + 1]) / 2
+                data_avg[i] = (vvv(i) + vvv(i+1)) / 2
             except:
-                data_avg[i] = data[i]
+                data_avg[i] = vvv(i)
 
         def bezier_interpolate_middle(p0, p1, p2, p3):
             """Interpolates the middle point using a cubic Bézier curve from 5 evenly spaced points."""
@@ -287,10 +291,13 @@ class Test_test():
         # y_smooth = spline(x)
         # y_smooth = igc.latitude
         plt.figure(figsize=(18, 5))
-        plt.plot(x, speed, 'o', label='reference', markersize=5, alpha=0.6)
-        plt.plot(x, data, '-', label='calculated', linewidth=1)
-        plt.plot(x, data_avg, '-', label='avg', linewidth=2)
-        plt.plot(x, data_b, '-', label='bezier', linewidth=2)
+
+        plt.plot(x, [vvv(i) for i in range(s,e)], 'o', label='raw', markersize=5, alpha=0.8)
+
+        # plt.plot(x, speed, 'o', label='reference', markersize=2, alpha=0.6)
+        # plt.plot(x, data, '-', label='calculated', linewidth=1)
+        # plt.plot(x, data_avg, '-', label='avg', linewidth=2)
+        # plt.plot(x, data_b, '-', label='bezier', linewidth=2)
 
         data = [igc_reader.getVerticalSpeed(a) for a in np.arange(s, e, 0.1)]
         x = np.arange(0, e - s, 0.1)
@@ -310,7 +317,7 @@ class Test_test():
         plt.legend()
         plt.xlabel("Index")
         plt.ylabel("Value")
-        plt.title("Restoring a Smooth Curve from Rounded Data")
+        plt.title("Interpolating vertical speed from integer data")
         plt.grid()
         plt.show()
 

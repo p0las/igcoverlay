@@ -90,7 +90,7 @@ class IgcReader():
         self._raw_data = self._igc_reader.from_file(path)
         self._track = self._raw_data.track
 
-        self.altitude = Interpolator2(self._track.gps_alt)
+        self.altitude = Interpolator2(self._track.gps_alt, 1) #lambda values here are experimental and may be wrong
         self.latitude = Interpolator2(self._track.latitude, 0.5)
         self.longitude = Interpolator2(self._track.longitude, 0.5)
 
@@ -98,15 +98,14 @@ class IgcReader():
         return len(self._track.latitude)
 
     def getSpeed(self, index):
-        i = index
-        distance = geodesic((self.latitude[i], self.longitude[i]), (self.latitude[i - 1], self.longitude[i - 1])).meters
+        distance = geodesic((self.latitude[index], self.longitude[index]), (self.latitude[index - 1], self.longitude[index - 1])).meters
         return distance * 3.6  # km/h
 
     def getAltitude(self, index):
         return self.altitude[index]
 
     def getVerticalSpeed(self, index):
-        return self.altitude[index + 1] - self.altitude[index]
+        return self.altitude[index] - self.altitude[index - 1]
 
     def getTime(self, index):
         pass
