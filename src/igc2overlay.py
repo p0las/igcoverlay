@@ -28,6 +28,7 @@ if __name__ == '__main__':
         data = {
             "vs": igc.getVerticalSpeed(float(i) / fps),
             "speed": igc.getSpeed(float(i) / fps),
-            "alt": igc.getAltitude(float(i) / fps)
+            "alt": igc.getAltitude(float(i) / fps),
+            "time": igc.getTime(float(i) / fps)
         }
         o.generate(p, data)

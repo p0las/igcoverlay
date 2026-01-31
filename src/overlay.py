@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any, Dict
+from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -100,6 +101,14 @@ class OverlayImage():
             self.addSection(left_margin, "Altitude (m)", data['alt'])
         if 'vs' in data and data['vs'] is not None:
             self.addSection(left_margin, "VS (m/s)", data['vs'])
+        if 'time' in data and data['time'] is not None:
+            # Format timestamp as string if it's a datetime object
+
+            if isinstance(data['time'], datetime):
+                time_str = data['time'].strftime("%H:%M:%S")
+            else:
+                time_str = str(data['time'])
+            self.addSection(left_margin, "Time", time_str)
 
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.img.save(path)
@@ -108,7 +117,11 @@ class OverlayImage():
 
         self.textWithBorder(left_margin, self.current_top, label, self.border_thickness/2, self.font_small, self.colour, self.outline_colour)
         self.moveTopLabel()
-        self.textWithBorder(left_margin, self.current_top, str(round(value, 1)), self.border_thickness, self.font, self.colour, self.outline_colour)
+        try:
+            value = str(round(value, 1))
+        except:
+            pass
+        self.textWithBorder(left_margin, self.current_top, value, self.border_thickness, self.font, self.colour, self.outline_colour)
         self.moveTopSection()
 
     def moveTopSection(self):

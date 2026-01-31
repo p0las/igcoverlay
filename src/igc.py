@@ -89,6 +89,7 @@ class IgcReader():
     def load(self, path):
         self._raw_data = self._igc_reader.from_file(path)
         self._track = self._raw_data.track
+        self._timestamps = self._track.timestamp
 
         self.altitude = Interpolator2(self._track.gps_alt, 1) #lambda values here are experimental and may be wrong
         self.latitude = Interpolator2(self._track.latitude, 0.5)
@@ -108,4 +109,8 @@ class IgcReader():
         return self.altitude[index] - self.altitude[index - 1]
 
     def getTime(self, index):
-        pass
+        """Returns the timestamp at the given index (can be fractional for interpolation)"""
+        idx = int(index)
+        if idx >= len(self._timestamps):
+            idx = len(self._timestamps) - 1
+        return self._timestamps[idx]
